@@ -1,1 +1,8 @@
-./tests/*
+tests/small
+tests/1gb.txt
+tests/2gb.txt
+tests/8gb.txt
+tests/11gb.txt
+tests/16mb.txt
+tests/128mb.txt
+tests/256mb.txt
