@@ -124,13 +124,15 @@ ArvoreRB *inserir(ArvoreRB *a, char v[])
 		if (change)
 			a->esq->cor = RED;
 	}
-	else
+	else if (strcmp(v, a->info) > 0)
 	{
 		change = a->dir == NULL;
 		a->dir = inserir(a->dir, v);
 		if (change)
 			a->dir->cor = RED;
 	}
+	else
+		a->count++;
 
 	return fixRBTree(a);
 }
@@ -171,7 +173,37 @@ int arv_rb_check(ArvoreRB *a, int myHeight, int height)
 	if (a == NULL)
 		return myHeight == height;
 
-	return arv_rb_check(a->esq, myHeight + !(is_red_node(a)), height) && arv_rb_check(a->dir, myHeight + !(is_red_node(a)), height);
+	return arv_rb_check(a->esq, myHeight + is_black_node(a), height) && arv_rb_check(a->dir, myHeight + is_black_node(a), height);
+}
+
+void getTheBestWords(ArvoreRB *a, int quantity, char **bestWords, int wordsCount[])
+{
+	if (!a)
+		return;
+
+	for (int i = quantity - 1; i >= 0; i--)
+	{
+		if (a->count <= wordsCount[i])
+		{
+			if (i == quantity - 1)
+				break;
+			strcpy(bestWords[i], a->info);
+			wordsCount[i] = a->count;
+		}
+		if (i == 0)
+		{
+			strcpy(bestWords[i], a->info);
+			wordsCount[i] = a->count;
+		}
+		else
+		{
+			strcpy(bestWords[i], bestWords[i - 1]);
+			wordsCount[i] = wordsCount[i - 1];
+		}
+	}
+
+	getTheBestWords(a->esq, quantity, bestWords, wordsCount);
+	getTheBestWords(a->dir, quantity, bestWords, wordsCount);
 }
 
 int showOptions()
@@ -182,7 +214,65 @@ int showOptions()
 
 int freq(int words, char *file)
 {
-	return showOptions();
+	int count = 0, len;
+	char wordRead[100];
+
+	ArvoreRB *a;
+
+	/* Try to open file */
+	FILE *fptr = fopen(file, "r");
+
+	/* Exit if file not opened successfully */
+	if (fptr == NULL)
+	{
+		printf("\nArquivo não encontrado ou sem permissão de leitura.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	while (fscanf(fptr, "%s", wordRead) != EOF)
+	{
+		// Convert word to lowercase
+		strlwr(wordRead);
+
+		// Remove last punctuation character
+		len = strlen(wordRead);
+		if (len > 1)
+		{
+			if (ispunct(wordRead[len - 1]))
+				wordRead[len - 1] = '\0';
+
+			a = inserir(a, wordRead);
+		}
+	}
+
+	char *resultString[words];
+	int resultInt[words];
+
+	for (int i = 0; i < words; i++)
+	{
+		resultString[i] = (char *)malloc(100 * sizeof(char));
+		strcpy(resultString[i], "");
+		resultInt[i] = 0;
+	}
+
+	getTheBestWords(a, words, resultString, resultInt);
+
+	// printTree(a, 1);
+	// printf("\nBINARY OK: %d\n", arv_bin_check(a));
+	// printf("RED BLACK OK: %d\n\n", arv_rb_check(a, 0, get_tree_height(a)));
+	// printTreeOrder(a);
+
+	printf("As %d palavras mais usadas no arquivo %s:\n", words, file);
+	// Close file and tree
+	for (int i = 0; i < words; i++)
+	{
+		printf("%s - %d vezes\n", resultString[i], resultInt[i]);
+		free(resultString[i]);
+	}
+	fclose(fptr);
+	arv_libera(a);
+
+	return 1;
 }
 
 int freqWord(char *word, char *file)
@@ -232,40 +322,27 @@ int search(int argsLength, char **args)
 
 int main(int argsLength, char **args)
 {
-	// if (argsLength <= 3)
-	// {
-	// 	return showOptions();
-	// }
+	if (argsLength <= 3)
+	{
+		return showOptions();
+	}
 
-	// if (strcmp(args[1], "--freq") == 0 && argsLength == 4)
-	// {
-	// 	return freq(atoi(args[2]), args[3]);
-	// }
-	// else if (strcmp(args[1], "--freq-word") == 0 && argsLength == 4)
-	// {
-	// 	return freqWord(args[2], args[3]);
-	// }
-	// else if (strcmp(args[1], "--search") == 0 && argsLength >= 4)
-	// {
-	// 	return search(argsLength, args);
-	// }
-	// else
-	// {
-	// 	return showOptions();
-	// }
+	if (strcmp(args[1], "--freq") == 0 && argsLength == 4)
+	{
+		return freq(atoi(args[2]), args[3]);
+	}
+	else if (strcmp(args[1], "--freq-word") == 0 && argsLength == 4)
+	{
+		return freqWord(args[2], args[3]);
+	}
+	else if (strcmp(args[1], "--search") == 0 && argsLength >= 4)
+	{
+		return search(argsLength, args);
+	}
+	else
+	{
+		return showOptions();
+	}
 
-	// return 1;
-	ArvoreRB *a;
-	a = inserir(a, "dale");
-	a = inserir(a, "ok");
-	a = inserir(a, "beleza");
-	a = inserir(a, "tranquilo");
-	a = inserir(a, "legal");
-	a = inserir(a, "sussa");
-	a = inserir(a, "deboa");
-	printTree(a, 1);
-	printf("\nBINARY OK: %d\n", arv_bin_check(a));
-	printf("RED BLACK OK: %d\n\n", arv_rb_check(a, 0, get_tree_height(a)));
-	printTreeOrder(a);
-	arv_libera(a);
+	return 1;
 }
