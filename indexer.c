@@ -1,6 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+
+char *strlwr(char *str)
+{
+	unsigned char *p = (unsigned char *)str;
+
+	while (*p)
+	{
+		*p = tolower((unsigned char)*p);
+		p++;
+	}
+
+	return str;
+}
 
 #define BLACK 0
 #define RED 1
@@ -173,7 +187,39 @@ int freq(int words, char *file)
 
 int freqWord(char *word, char *file)
 {
-	return showOptions();
+	int count = 0, len;
+	char wordRead[100];
+
+	/* Try to open file */
+	FILE *fptr = fopen(file, "r");
+
+	/* Exit if file not opened successfully */
+	if (fptr == NULL)
+	{
+		printf("\nUnable to open file.\n");
+		printf("Please check you have read previleges.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	while (fscanf(fptr, "%s", wordRead) != EOF)
+	{
+		// Convert word to lowercase
+		strlwr(wordRead);
+
+		// Remove last punctuation character
+		len = strlen(wordRead);
+		if (ispunct(wordRead[len - 1]))
+			wordRead[len - 1] = '\0';
+
+		if (strcmp(wordRead, word) == 0)
+			count++;
+	}
+
+	// Close file
+	fclose(fptr);
+
+	printf("\nA palavra %s ocorre %d vezes no arquivo %s.\n", word, count, file);
+	return 1;
 }
 
 int search(int argsLength, char **args)
