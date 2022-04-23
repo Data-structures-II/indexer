@@ -3,19 +3,6 @@
 #include <string.h>
 #include <ctype.h>
 
-char *strlwr(char *str)
-{
-	unsigned char *p = (unsigned char *)str;
-
-	while (*p)
-	{
-		*p = tolower((unsigned char)*p);
-		p++;
-	}
-
-	return str;
-}
-
 #define BLACK 0
 #define RED 1
 
@@ -214,9 +201,6 @@ int showOptions()
 
 int freq(int words, char *file)
 {
-	int count = 0, len;
-	char wordRead[100];
-
 	ArvoreRB *a;
 
 	/* Try to open file */
@@ -229,19 +213,40 @@ int freq(int words, char *file)
 		exit(EXIT_FAILURE);
 	}
 
-	while (fscanf(fptr, "%s", wordRead) != EOF)
+	char c;
+	int i = 0, len;
+	char wordRead[100];
+	char wordReadStripped[100];
+	while ((c = getc(fptr)) != EOF)
 	{
-		// Convert word to lowercase
-		strlwr(wordRead);
-
-		// Remove last punctuation character
-		len = strlen(wordRead);
-		if (len > 1)
+		c = tolower(c);
+		if ((c > 47 && c < 58) || (c >= 97 && c <= 122))
 		{
-			if (ispunct(wordRead[len - 1]))
-				wordRead[len - 1] = '\0';
+			wordRead[i] = c;
+			i++;
+		}
+		else if (c == ' ' || c == '\n' || c == 32 || c == '-')
+		{
+			wordRead[i] = '\0';
+			i = 0;
 
-			a = inserir(a, wordRead);
+			len = strlen(wordRead);
+			if (len > 1)
+			{
+				// remove special chars
+				int j = 0, k = 0;
+				for (; j < strlen(wordRead); j++)
+				{
+					if (isalnum(wordRead[j]))
+					{
+						wordReadStripped[k] = wordRead[j];
+						k++;
+					}
+				}
+				wordReadStripped[k] = '\0';
+
+				a = inserir(a, wordReadStripped);
+			}
 		}
 	}
 
@@ -292,6 +297,7 @@ int freqWord(char *word, char *file)
 	char c;
 	int i = 0;
 	char wordRead[100];
+	char wordReadStripped[100];
 	while ((c = getc(fptr)) != EOF)
 	{
 		c = tolower(c);
@@ -300,14 +306,24 @@ int freqWord(char *word, char *file)
 			wordRead[i] = c;
 			i++;
 		}
-		else if (c == ' ' || c == '\n' || c == 32)
+		else if (c == ' ' || c == '\n' || c == 32 || c == '-')
 		{
 			wordRead[i] = '\0';
 			i = 0;
 
-			// remover caracteres especiais de word antes de comparar
+			// remove special chars
+			int j = 0, k = 0;
+			for (; j < strlen(wordRead); j++)
+			{
+				if (isalnum(wordRead[j]))
+				{
+					wordReadStripped[k] = wordRead[j];
+					k++;
+				}
+			}
+			wordReadStripped[k] = '\0';
 
-			if (strcmp(wordRead, word) == 0)
+			if (strcmp(wordReadStripped, word) == 0)
 				count++;
 		}
 	}
@@ -331,26 +347,16 @@ int search(int argsLength, char **args)
 int main(int argsLength, char **args)
 {
 	if (argsLength <= 3)
-	{
 		return showOptions();
-	}
 
 	if (strcmp(args[1], "--freq") == 0 && argsLength == 4)
-	{
 		return freq(atoi(args[2]), args[3]);
-	}
 	else if (strcmp(args[1], "--freq-word") == 0 && argsLength == 4)
-	{
 		return freqWord(args[2], args[3]);
-	}
 	else if (strcmp(args[1], "--search") == 0 && argsLength >= 4)
-	{
 		return search(argsLength, args);
-	}
 	else
-	{
 		return showOptions();
-	}
 
 	return 1;
 }
