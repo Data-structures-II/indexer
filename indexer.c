@@ -65,7 +65,6 @@ ArvoreRB *fixRBTree(ArvoreRB *a)
 		a = rot_dir(a);
 	else if (is_red_node(a->dir) && is_red_node(a->esq))
 		flip_cor(a);
-
 	return a;
 }
 
@@ -201,7 +200,7 @@ int showOptions()
 
 int freq(int words, char *file)
 {
-	ArvoreRB *a;
+	ArvoreRB *a = (ArvoreRB *)malloc(sizeof(ArvoreRB));
 
 	/* Try to open file */
 	FILE *fptr = fopen(file, "r");
@@ -214,7 +213,7 @@ int freq(int words, char *file)
 	}
 
 	char c;
-	int i = 0, len;
+	int i = 0;
 	char wordRead[100];
 	char wordReadStripped[100];
 	while ((c = getc(fptr)) != EOF)
@@ -230,8 +229,7 @@ int freq(int words, char *file)
 			wordRead[i] = '\0';
 			i = 0;
 
-			len = strlen(wordRead);
-			if (len > 1)
+			if (strlen(wordRead) > 1)
 			{
 				// remove special chars
 				int j = 0, k = 0;
@@ -244,7 +242,6 @@ int freq(int words, char *file)
 					}
 				}
 				wordReadStripped[k] = '\0';
-
 				a = inserir(a, wordReadStripped);
 			}
 		}
