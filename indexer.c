@@ -278,7 +278,6 @@ int freq(int words, char *file)
 int freqWord(char *word, char *file)
 {
 	int count = 0, len;
-	char wordRead[100];
 
 	/* Try to open file */
 	FILE *fptr = fopen(file, "r");
@@ -290,18 +289,27 @@ int freqWord(char *word, char *file)
 		exit(EXIT_FAILURE);
 	}
 
-	while (fscanf(fptr, "%s", wordRead) != EOF)
+	char c;
+	int i = 0;
+	char wordRead[100];
+	while ((c = getc(fptr)) != EOF)
 	{
-		// Convert word to lowercase
-		strlwr(wordRead);
+		c = tolower(c);
+		if ((c > 47 && c < 58) || (c >= 97 && c <= 122))
+		{
+			wordRead[i] = c;
+			i++;
+		}
+		else if (c == ' ' || c == '\n' || c == 32)
+		{
+			wordRead[i] = '\0';
+			i = 0;
 
-		// Remove last punctuation character
-		len = strlen(wordRead);
-		if (ispunct(wordRead[len - 1]))
-			wordRead[len - 1] = '\0';
+			// remover caracteres especiais de word antes de comparar
 
-		if (strcmp(wordRead, word) == 0)
-			count++;
+			if (strcmp(wordRead, word) == 0)
+				count++;
+		}
 	}
 
 	// Close file
