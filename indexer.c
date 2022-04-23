@@ -21,7 +21,8 @@ char *strlwr(char *str)
 
 typedef struct arvoreRB
 {
-	int info;
+	char info[100];
+	int count;
 	int cor;
 	struct arvoreRB *esq;
 	struct arvoreRB *dir;
@@ -81,9 +82,9 @@ ArvoreRB *fixRBTree(ArvoreRB *a)
 	return a;
 }
 
-int buscar(ArvoreRB *a, int v)
+int buscar(ArvoreRB *a, char v[])
 {
-	return a != NULL && (v < a->info ? buscar(a->esq, v) : (v > a->info ? buscar(a->dir, v) : 1));
+	return a != NULL && (strcmp(v, a->info) < 0 ? buscar(a->esq, v) : (strcmp(v, a->info) > 0 ? buscar(a->dir, v) : 1));
 }
 
 void printTreeOrder(ArvoreRB *a)
@@ -91,7 +92,7 @@ void printTreeOrder(ArvoreRB *a)
 	if (!a)
 		return;
 	printTreeOrder(a->esq);
-	printf("%d ", a->info);
+	printf("%s - %d\n", a->info, a->count);
 	printTreeOrder(a->dir);
 }
 
@@ -99,23 +100,24 @@ void printTree(ArvoreRB *a, int height)
 {
 	if (a != NULL)
 	{
-		printf("%d - %d : %s\n", height, a->info, a->cor ? "RED" : "BLACK");
+		printf("%d - %s / %d : %s\n", height, a->info, a->count, a->cor ? "RED" : "BLACK");
 		printTree(a->esq, height + 1);
 		printTree(a->dir, height + 1);
 	}
 }
 
-ArvoreRB *inserir(ArvoreRB *a, int v)
+ArvoreRB *inserir(ArvoreRB *a, char v[])
 {
 	int change = 0;
 	if (a == NULL)
 	{
 		a = (ArvoreRB *)malloc(sizeof(ArvoreRB));
-		a->info = v;
+		strcpy(a->info, v);
+		a->count = 1;
 		a->cor = BLACK;
 		a->esq = a->dir = NULL;
 	}
-	else if (v < a->info)
+	else if (strcmp(v, a->info) < 0)
 	{
 		change = a->esq == NULL;
 		a->esq = inserir(a->esq, v);
@@ -129,8 +131,6 @@ ArvoreRB *inserir(ArvoreRB *a, int v)
 		if (change)
 			a->dir->cor = RED;
 	}
-
-	change = 0;
 
 	return fixRBTree(a);
 }
@@ -150,7 +150,7 @@ int arv_bin_check(ArvoreRB *a)
 {
 	return a == NULL
 			   ? 1
-			   : ((a->esq == NULL || a->info > a->esq->info) && (a->dir == NULL || a->info < a->dir->info) && arv_bin_check(a->esq) && arv_bin_check(a->dir));
+			   : ((a->esq == NULL || strcmp(a->info, a->esq->info) > 0) && (a->dir == NULL || strcmp(a->info, a->dir->info) < 0) && arv_bin_check(a->esq) && arv_bin_check(a->dir));
 }
 
 int get_tree_height(ArvoreRB *a)
@@ -232,43 +232,40 @@ int search(int argsLength, char **args)
 
 int main(int argsLength, char **args)
 {
-	if (argsLength <= 3)
-	{
-		return showOptions();
-	}
+	// if (argsLength <= 3)
+	// {
+	// 	return showOptions();
+	// }
 
-	if (strcmp(args[1], "--freq") == 0 && argsLength == 4)
-	{
-		return freq(atoi(args[2]), args[3]);
-	}
-	else if (strcmp(args[1], "--freq-word") == 0 && argsLength == 4)
-	{
-		return freqWord(args[2], args[3]);
-	}
-	else if (strcmp(args[1], "--search") == 0 && argsLength >= 4)
-	{
-		return search(argsLength, args);
-	}
-	else
-	{
-		return showOptions();
-	}
+	// if (strcmp(args[1], "--freq") == 0 && argsLength == 4)
+	// {
+	// 	return freq(atoi(args[2]), args[3]);
+	// }
+	// else if (strcmp(args[1], "--freq-word") == 0 && argsLength == 4)
+	// {
+	// 	return freqWord(args[2], args[3]);
+	// }
+	// else if (strcmp(args[1], "--search") == 0 && argsLength >= 4)
+	// {
+	// 	return search(argsLength, args);
+	// }
+	// else
+	// {
+	// 	return showOptions();
+	// }
 
-	return 1;
-	// ArvoreRB *a;
-	// a = inserir(a, 5);
-	// a = inserir(a, 3);
-	// a = inserir(a, 9);
-	// a = inserir(a, 1);
-	// a = inserir(a, 4);
-	// a = inserir(a, 7);
-	// a = inserir(a, 2);
-	// a = inserir(a, 6);
-	// a = inserir(a, 8);
-	// a = inserir(a, 10);
-	// printTree(a, 1);
-	// printf("\nBINARY OK: %d\n", arv_bin_check(a));
-	// printf("RED BLACK OK: %d\n\n", arv_rb_check(a, 0, get_tree_height(a)));
-	// printTreeOrder(a);
-	// arv_libera(a);
+	// return 1;
+	ArvoreRB *a;
+	a = inserir(a, "dale");
+	a = inserir(a, "ok");
+	a = inserir(a, "beleza");
+	a = inserir(a, "tranquilo");
+	a = inserir(a, "legal");
+	a = inserir(a, "sussa");
+	a = inserir(a, "deboa");
+	printTree(a, 1);
+	printf("\nBINARY OK: %d\n", arv_bin_check(a));
+	printf("RED BLACK OK: %d\n\n", arv_rb_check(a, 0, get_tree_height(a)));
+	printTreeOrder(a);
+	arv_libera(a);
 }
