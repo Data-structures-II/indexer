@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define BLACK 0
 #define RED 1
@@ -159,22 +160,48 @@ int arv_rb_check(ArvoreRB *a, int myHeight, int height)
   return arv_rb_check(a->esq, myHeight + !(is_red_node(a)), height) && arv_rb_check(a->dir, myHeight + !(is_red_node(a)), height);
 }
 
-int main()
+int showOptions()
 {
-  ArvoreRB *a;
-  a = inserir(a, 5);
-  a = inserir(a, 3);
-  a = inserir(a, 9);
-  a = inserir(a, 1);
-  a = inserir(a, 4);
-  a = inserir(a, 7);
-  a = inserir(a, 2);
-  a = inserir(a, 6);
-  a = inserir(a, 8);
-  a = inserir(a, 10);
-  printTree(a, 1);
-  printf("\nBINARY OK: %d\n", arv_bin_check(a));
-  printf("RED BLACK OK: %d\n\n", arv_rb_check(a, 0, get_tree_height(a)));
+  printf("OPÇÕES\n\n--freq N ARQUIVO\nExibe o número de ocorrência das N palavras que mais aparecem em ARQUIVO, em ordem decrescente de ocorrência.\n\n--freq-word PALAVRA ARQUIVO\nExibe o número de ocorrências de PALAVRA em ARQUIVO.\n\n--search TERMO ARQUIVO [ARQUIVO ...]\nExibe uma listagem dos ARQUIVOS mais relevantes encontrados pela busca por TERMO. A listagem é apresentada em ordem descrescente de relevância. TERMO pode conter mais de uma palavra. Neste caso, deve ser indicado entre àspas.\n");
+  return -1;
+}
+
+int main(int argsLength, char *args)
+{
+  if (argsLength <= 3)
+  {
+    return showOptions();
+  }
+
+  if (strcmp(args[1], "--freq") == 0 && argsLength == 4)
+  {
+  }
+  else if (strcmp(args[1], "--freq-word") == 0 && argsLength == 4)
+  {
+  }
+  else if (strcmp(args[1], "--search") == 0 && argsLength >= 4)
+  {
+  }
+  else
+  {
+    return showOptions();
+  }
+
+  return 1;
+  // ArvoreRB *a;
+  // a = inserir(a, 5);
+  // a = inserir(a, 3);
+  // a = inserir(a, 9);
+  // a = inserir(a, 1);
+  // a = inserir(a, 4);
+  // a = inserir(a, 7);
+  // a = inserir(a, 2);
+  // a = inserir(a, 6);
+  // a = inserir(a, 8);
+  // a = inserir(a, 10);
+  // printTree(a, 1);
+  // printf("\nBINARY OK: %d\n", arv_bin_check(a));
+  // printf("RED BLACK OK: %d\n\n", arv_rb_check(a, 0, get_tree_height(a)));
   // printTreeOrder(a);
-  arv_libera(a);
+  // arv_libera(a);
 }
