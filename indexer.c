@@ -196,8 +196,7 @@ int freqWord(char *word, char *file)
 	/* Exit if file not opened successfully */
 	if (fptr == NULL)
 	{
-		printf("\nUnable to open file.\n");
-		printf("Please check you have read previleges.\n");
+		printf("\nArquivo não encontrado ou sem permissão de leitura.\n");
 		exit(EXIT_FAILURE);
 	}
 
