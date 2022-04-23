@@ -169,23 +169,19 @@ void getTheBestWords(ArvoreRB *a, int quantity, char **bestWords, int wordsCount
 
 	for (int i = quantity - 1; i >= 0; i--)
 	{
-		if (a->count <= wordsCount[i])
+		if (a->count > wordsCount[i])
 		{
-			if (i == quantity - 1)
-				break;
-			strcpy(bestWords[i], a->info);
-			wordsCount[i] = a->count;
-		}
-		if (i == 0)
-		{
+			if (i < quantity - 1)
+			{
+				strcpy(bestWords[i + 1], bestWords[i]);
+				wordsCount[i + 1] = wordsCount[i];
+			}
+
 			strcpy(bestWords[i], a->info);
 			wordsCount[i] = a->count;
 		}
 		else
-		{
-			strcpy(bestWords[i], bestWords[i - 1]);
-			wordsCount[i] = wordsCount[i - 1];
-		}
+			break;
 	}
 
 	getTheBestWords(a->esq, quantity, bestWords, wordsCount);
@@ -200,7 +196,7 @@ int showOptions()
 
 int freq(int words, char *file)
 {
-	ArvoreRB *a = (ArvoreRB *)malloc(sizeof(ArvoreRB));
+	ArvoreRB *a = NULL;
 
 	/* Try to open file */
 	FILE *fptr = fopen(file, "r");
@@ -216,7 +212,7 @@ int freq(int words, char *file)
 	int i = 0;
 	char wordRead[100];
 	char wordReadStripped[100];
-	while ((c = getc(fptr)) != EOF)
+	while (c = getc(fptr))
 	{
 		c = tolower(c);
 		if ((c > 47 && c < 58) || (c >= 97 && c <= 122))
@@ -224,7 +220,7 @@ int freq(int words, char *file)
 			wordRead[i] = c;
 			i++;
 		}
-		else if (c == ' ' || c == '\n' || c == 32 || c == '-')
+		else if (c == ' ' || c == '\n' || c == 32 || c == '-' || c == EOF)
 		{
 			wordRead[i] = '\0';
 			i = 0;
@@ -244,6 +240,9 @@ int freq(int words, char *file)
 				wordReadStripped[k] = '\0';
 				a = inserir(a, wordReadStripped);
 			}
+
+			if (c == EOF)
+				break;
 		}
 	}
 
@@ -253,7 +252,6 @@ int freq(int words, char *file)
 	for (int i = 0; i < words; i++)
 	{
 		resultString[i] = (char *)malloc(100 * sizeof(char));
-		strcpy(resultString[i], "");
 		resultInt[i] = 0;
 	}
 
