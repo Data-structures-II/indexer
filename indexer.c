@@ -17,7 +17,7 @@ typedef struct arvoreRB
 
 int is_black_node(ArvoreRB *no)
 {
-	return no && no->cor == BLACK;
+	return no == NULL || no->cor == BLACK;
 }
 
 int is_red_node(ArvoreRB *no)
@@ -28,6 +28,13 @@ int is_red_node(ArvoreRB *no)
 int verifica_arv_vazia(ArvoreRB *a)
 {
 	return (a == NULL);
+}
+
+void flip_cor(ArvoreRB *no)
+{
+	no->cor = RED;
+	no->esq->cor = BLACK;
+	no->dir->cor = BLACK;
 }
 
 ArvoreRB *rot_esq(ArvoreRB *no)
@@ -47,23 +54,18 @@ ArvoreRB *rot_dir(ArvoreRB *no)
 	tree->dir = no;
 	tree->cor = no->cor;
 	no->cor = RED;
+	if (is_red_node(tree->dir) && is_red_node(tree->esq))
+		flip_cor(tree);
 	return (tree);
-}
-
-void flip_cor(ArvoreRB *no)
-{
-	no->cor = RED;
-	no->esq->cor = BLACK;
-	no->dir->cor = BLACK;
 }
 
 ArvoreRB *fixRBTree(ArvoreRB *a)
 {
 	if (is_red_node(a->dir) && is_black_node(a->esq))
 		a = rot_esq(a);
-	else if (is_red_node(a->esq) && is_red_node(a->esq->esq))
+	if (is_red_node(a->esq) && is_red_node(a->esq->esq))
 		a = rot_dir(a);
-	else if (is_red_node(a->dir) && is_red_node(a->esq))
+	if (is_red_node(a->dir) && is_red_node(a->esq))
 		flip_cor(a);
 	return a;
 }
@@ -257,9 +259,9 @@ int freq(int words, char *file)
 
 	getTheBestWords(a, words, resultString, resultInt);
 
-	// printTree(a, 1);
+	// printf("RED BLACK OK: %d", arv_rb_check(a, 0, get_tree_height(a)));
 	// printf("\nBINARY OK: %d\n", arv_bin_check(a));
-	// printf("RED BLACK OK: %d\n\n", arv_rb_check(a, 0, get_tree_height(a)));
+	// printTree(a, 1);
 	// printTreeOrder(a);
 
 	printf("As %d palavras mais usadas no arquivo %s:\n", words, file);
