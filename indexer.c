@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
 
 #define BLACK 0
 #define RED 1
@@ -10,6 +11,7 @@ typedef struct arvoreRB
 {
 	char info[100];
 	int count;
+	double tfidf;
 	int cor;
 	struct arvoreRB *esq;
 	struct arvoreRB *dir;
@@ -84,6 +86,15 @@ void printTreeOrder(ArvoreRB *a)
 	printTreeOrder(a->dir);
 }
 
+void printTreeOrder2(ArvoreRB *a)
+{
+	if (!a)
+		return;
+	printTreeOrder(a->esq);
+	printf("%s - %f\n", a->info, a->tfidf);
+	printTreeOrder(a->dir);
+}
+
 void printTree(ArvoreRB *a, int height)
 {
 	if (a != NULL)
@@ -94,7 +105,7 @@ void printTree(ArvoreRB *a, int height)
 	}
 }
 
-ArvoreRB *inserir(ArvoreRB *a, char v[], int count)
+ArvoreRB *inserir(ArvoreRB *a, char v[], int count, double tfidf)
 {
 	int change = 0;
 	if (a == NULL)
@@ -102,20 +113,21 @@ ArvoreRB *inserir(ArvoreRB *a, char v[], int count)
 		a = (ArvoreRB *)malloc(sizeof(ArvoreRB));
 		strcpy(a->info, v);
 		a->count = count;
+		a->tfidf = tfidf;
 		a->cor = BLACK;
 		a->esq = a->dir = NULL;
 	}
 	else if (strcmp(v, a->info) < 0)
 	{
 		change = a->esq == NULL;
-		a->esq = inserir(a->esq, v, count);
+		a->esq = inserir(a->esq, v, count, tfidf);
 		if (change)
 			a->esq->cor = RED;
 	}
 	else if (strcmp(v, a->info) > 0)
 	{
 		change = a->dir == NULL;
-		a->dir = inserir(a->dir, v, count);
+		a->dir = inserir(a->dir, v, count, tfidf);
 		if (change)
 			a->dir->cor = RED;
 	}
@@ -196,7 +208,88 @@ int showOptions()
 	return -1;
 }
 
-int countWordsInFile(char *word, char *file)
+int freq(int words, char *file)
+{
+	ArvoreRB *a = NULL;
+
+	/* Try to open file */
+	FILE *fptr = fopen(file, "r");
+
+	/* Exit if file not opened successfully */
+	if (fptr == NULL)
+	{
+		printf("\nArquivo não encontrado ou sem permissão de leitura.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	char c;
+	int i = 0;
+	char wordRead[100];
+	char wordReadStripped[100];
+	while (c = getc(fptr))
+	{
+		c = tolower(c);
+		if ((c > 47 && c < 58) || (c >= 97 && c <= 122))
+		{
+			wordRead[i] = c;
+			i++;
+		}
+		else if (c == ' ' || c == '\n' || c == 32 || c == '-' || c == EOF)
+		{
+			wordRead[i] = '\0';
+			i = 0;
+
+			if (strlen(wordRead) > 1)
+			{
+				// remove special chars
+				int j = 0, k = 0;
+				for (; j < strlen(wordRead); j++)
+				{
+					if (isalnum(wordRead[j]))
+					{
+						wordReadStripped[k] = wordRead[j];
+						k++;
+					}
+				}
+				wordReadStripped[k] = '\0';
+				a = inserir(a, wordReadStripped, 1, 0.0);
+			}
+
+			if (c == EOF)
+				break;
+		}
+	}
+
+	char *resultString[words];
+	int resultInt[words];
+
+	for (int i = 0; i < words; i++)
+	{
+		resultString[i] = (char *)malloc(100 * sizeof(char));
+		resultInt[i] = 0;
+	}
+
+	getTheBestWords(a, words, resultString, resultInt);
+
+	// printf("RED BLACK OK: %d", arv_rb_check(a, 0, get_tree_height(a)));
+	// printf("\nBINARY OK: %d\n", arv_bin_check(a));
+	// printTree(a, 1);
+	// printTreeOrder(a);
+
+	printf("As %d palavras mais usadas no arquivo %s:\n", words, file);
+	// Close file and tree
+	for (int i = 0; i < words; i++)
+	{
+		printf("%s - %d vezes\n", resultString[i], resultInt[i]);
+		free(resultString[i]);
+	}
+	fclose(fptr);
+	arv_libera(a);
+
+	return 1;
+}
+
+int freqWord(char *word, char *file)
 {
 	int count = 0, len;
 
@@ -247,115 +340,123 @@ int countWordsInFile(char *word, char *file)
 	// Close file
 	fclose(fptr);
 
-	return count;
-}
-
-int freq(int words, char *file)
-{
-	ArvoreRB *a = NULL;
-
-	/* Try to open file */
-	FILE *fptr = fopen(file, "r");
-
-	/* Exit if file not opened successfully */
-	if (fptr == NULL)
-	{
-		printf("\nArquivo não encontrado ou sem permissão de leitura.\n");
-		exit(EXIT_FAILURE);
-	}
-
-	char c;
-	int i = 0;
-	char wordRead[100];
-	char wordReadStripped[100];
-	while (c = getc(fptr))
-	{
-		c = tolower(c);
-		if ((c > 47 && c < 58) || (c >= 97 && c <= 122))
-		{
-			wordRead[i] = c;
-			i++;
-		}
-		else if (c == ' ' || c == '\n' || c == 32 || c == '-' || c == EOF)
-		{
-			wordRead[i] = '\0';
-			i = 0;
-
-			if (strlen(wordRead) > 1)
-			{
-				// remove special chars
-				int j = 0, k = 0;
-				for (; j < strlen(wordRead); j++)
-				{
-					if (isalnum(wordRead[j]))
-					{
-						wordReadStripped[k] = wordRead[j];
-						k++;
-					}
-				}
-				wordReadStripped[k] = '\0';
-				a = inserir(a, wordReadStripped, 1);
-			}
-
-			if (c == EOF)
-				break;
-		}
-	}
-
-	char *resultString[words];
-	int resultInt[words];
-
-	for (int i = 0; i < words; i++)
-	{
-		resultString[i] = (char *)malloc(100 * sizeof(char));
-		resultInt[i] = 0;
-	}
-
-	getTheBestWords(a, words, resultString, resultInt);
-
-	// printf("RED BLACK OK: %d", arv_rb_check(a, 0, get_tree_height(a)));
-	// printf("\nBINARY OK: %d\n", arv_bin_check(a));
-	// printTree(a, 1);
-	// printTreeOrder(a);
-
-	printf("As %d palavras mais usadas no arquivo %s:\n", words, file);
-	// Close file and tree
-	for (int i = 0; i < words; i++)
-	{
-		printf("%s - %d vezes\n", resultString[i], resultInt[i]);
-		free(resultString[i]);
-	}
-	fclose(fptr);
-	arv_libera(a);
-
-	return 1;
-}
-
-int freqWord(char *word, char *file)
-{
-	int count = countWordsInFile(word, file);
 	printf("\nA palavra %s ocorre %d vezes no arquivo %s.\n", word, count, file);
 	return 1;
 }
 
 int search(int argsLength, char **args)
 {
-	ArvoreRB *a = NULL;
-	int count;
-	char *file;
-	char *word = args[2];
-	for (int i = 3; i < argsLength; ++i)
+	FILE *fptr;
+	int allWordsCounter, searchCounter, i, j, k, h, splitCounter = 0, wordIndex;
+	int filesLength = argsLength - 3;
+	char c;
+	char wordRead[100];
+	char wordReadStripped[100];
+	char delim[] = " ";
+
+	char *search = malloc(sizeof(char) * (strlen(args[2]) + 1));
+	strcpy(search, args[2]);
+
+	// splitting the input by spaces (getting each word)
+	char *word = strtok(args[2], delim);
+	while (word != NULL)
 	{
-		file = args[i];
-		count = countWordsInFile(word, file);
-		a = inserir(a, file, count);
+		splitCounter++;
+		word = strtok(NULL, delim);
+	}
+	int wordsArray[splitCounter][filesLength]; // count each word in each file
+	int wordIsInFileArray[splitCounter];	   // in how many files the word is
+	int wordsInFile[filesLength];			   // word count by file
+
+	for (i = 0; i < splitCounter; i++)
+		wordIsInFileArray[i] = 0;
+
+	for (h = 3; h < argsLength; h++)
+	{
+		word = strtok(args[2], delim);
+		i = 0;
+		wordIndex = 0;
+		allWordsCounter = searchCounter = 0;
+		while (word != NULL)
+		{
+			/* Try to open file */
+			fptr = fopen(args[h], "r");
+
+			/* Exit if file not opened successfully */
+			if (fptr == NULL)
+			{
+				printf("\nArquivo não encontrado ou sem permissão de leitura.\n");
+				exit(EXIT_FAILURE);
+			}
+
+			while ((c = getc(fptr)) != EOF)
+			{
+				c = tolower(c);
+				if ((c > 47 && c < 58) || (c >= 97 && c <= 122))
+				{
+					wordRead[i] = c;
+					i++;
+				}
+				else if (c == ' ' || c == '\n' || c == 32 || c == '-')
+				{
+					wordRead[i] = '\0';
+					i = 0;
+
+					// remove special chars
+					j = 0;
+					k = 0;
+					for (; j < strlen(wordRead); j++)
+					{
+						if (isalnum(wordRead[j]))
+						{
+							wordReadStripped[k] = wordRead[j];
+							k++;
+						}
+					}
+					wordReadStripped[k] = '\0';
+
+					if (strcmp(wordReadStripped, word) == 0)
+						searchCounter++;
+					allWordsCounter++;
+				}
+			}
+
+			wordsArray[wordIndex][h - 3] = searchCounter;
+			if (searchCounter > 0)
+				wordIsInFileArray[wordIndex]++;
+			wordIndex++;
+			word = strtok(NULL, delim);
+		}
+		wordsInFile[h - 3] = allWordsCounter;
+		fclose(fptr);
 	}
 
-	printf("RED BLACK OK: %d", arv_rb_check(a, 0, get_tree_height(a)));
-	printf("\nBINARY OK: %d\n", arv_bin_check(a));
-	// printTree(a, 1);
-	printTreeOrder(a);
+	ArvoreRB *a = NULL;
+	double tf, idf, tfidf;
+	for (h = 3; h < argsLength; h++)
+	{
+		tfidf = 0;
+		for (i = 0; i < splitCounter; i++)
+		{
+			// Calc the TFIDF
+			if (wordsInFile[h - 3] > 0 && wordIsInFileArray[i] > 0 && splitCounter > 0)
+			{
+				tf = wordsArray[i][h - 3] / wordsInFile[h - 3];
+				idf = log10(filesLength / wordIsInFileArray[i]);
+				tfidf += (tf * idf) / splitCounter;
+			}
+		}
+		a = inserir(a, args[h], 1, tfidf);
+	}
 
+	// printf("RED BLACK OK: %d", arv_rb_check(a, 0, get_tree_height(a)));
+	// printf("\nBINARY OK: %d\n", arv_bin_check(a));
+	// printTree(a, 1);
+	printf("Resultados da busca por \"%s\":\n", search);
+	printTreeOrder2(a);
+
+	free(search);
+	arv_libera(a);
 	return 1;
 }
 
