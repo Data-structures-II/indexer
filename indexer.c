@@ -90,9 +90,9 @@ void printTreeOrder2(ArvoreRB *a)
 {
 	if (!a)
 		return;
-	printTreeOrder2(a->esq);
-	printf("%s - %f \n", a->info, a->tfidf);
 	printTreeOrder2(a->dir);
+	printf("%s - %f \n", a->info, a->tfidf);
+	printTreeOrder2(a->esq);
 }
 
 void printTree(ArvoreRB *a, int height)
@@ -370,7 +370,7 @@ int freqWord(char *word, char *file)
 	// Close file
 	fclose(fptr);
 
-	printf("\nA palavra %s ocorre %d vezes no arquivo %s.\n", word, count, file);
+	printf("A palavra %s ocorre %d vezes no arquivo %s.\n", word, count, file);
 	return 1;
 }
 

@@ -5,7 +5,7 @@ Link para arquivos de testes: http://200.236.3.126:8999/ds143-texts/
 ## Build and run
 Para buildar o projeto, basta usar um compilador de linguagem C, como, por exemplo, gcc:
 ```
-$ gcc indexer.c -o indexer
+$ gcc indexer.c -o indexer -lm
 ```
 
 Então rodar o programa:
