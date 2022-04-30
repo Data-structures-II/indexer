@@ -11,7 +11,7 @@ typedef struct arvoreRB
 {
 	char info[100];
 	int count;
-	double tfidf;
+	float tfidf;
 	int cor;
 	struct arvoreRB *esq;
 	struct arvoreRB *dir;
@@ -90,22 +90,52 @@ void printTreeOrder2(ArvoreRB *a)
 {
 	if (!a)
 		return;
-	printTreeOrder(a->esq);
-	printf("%s - %f\n", a->info, a->tfidf);
-	printTreeOrder(a->dir);
+	printTreeOrder2(a->esq);
+	printf("%s - %f \n", a->info, a->tfidf);
+	printTreeOrder2(a->dir);
 }
 
 void printTree(ArvoreRB *a, int height)
 {
 	if (a != NULL)
 	{
-		printf("%d - %s / %d : %s\n", height, a->info, a->count, a->cor ? "RED" : "BLACK");
+		printf("%d - %s / %d / %f : %s\n", height, a->info, a->count, a->tfidf, a->cor ? "RED" : "BLACK");
 		printTree(a->esq, height + 1);
 		printTree(a->dir, height + 1);
 	}
 }
 
-ArvoreRB *inserir(ArvoreRB *a, char v[], int count, double tfidf)
+ArvoreRB *inserirByTFIDF(ArvoreRB *a, char v[], int count, float tfidf)
+{
+	int change = 0;
+	if (a == NULL)
+	{
+		a = (ArvoreRB *)malloc(sizeof(ArvoreRB));
+		strcpy(a->info, v);
+		a->count = count;
+		a->tfidf = tfidf;
+		a->cor = BLACK;
+		a->esq = a->dir = NULL;
+	}
+	else if (tfidf < a->tfidf)
+	{
+		change = a->esq == NULL;
+		a->esq = inserirByTFIDF(a->esq, v, count, tfidf);
+		if (change)
+			a->esq->cor = RED;
+	}
+	else
+	{
+		change = a->dir == NULL;
+		a->dir = inserirByTFIDF(a->dir, v, count, tfidf);
+		if (change)
+			a->dir->cor = RED;
+	}
+
+	return fixRBTree(a);
+}
+
+ArvoreRB *inserir(ArvoreRB *a, char v[], int count, float tfidf)
 {
 	int change = 0;
 	if (a == NULL)
@@ -373,6 +403,7 @@ int search(int argsLength, char **args)
 
 	for (h = 3; h < argsLength; h++)
 	{
+		strcpy(args[2], search);
 		word = strtok(args[2], delim);
 		i = 0;
 		wordIndex = 0;
@@ -421,6 +452,7 @@ int search(int argsLength, char **args)
 				}
 			}
 
+			printf("Search counter for '%s' in '%s': %d\n", word, args[h], searchCounter);
 			wordsArray[wordIndex][h - 3] = searchCounter;
 			if (searchCounter > 0)
 				wordIsInFileArray[wordIndex]++;
@@ -428,11 +460,12 @@ int search(int argsLength, char **args)
 			word = strtok(NULL, delim);
 		}
 		wordsInFile[h - 3] = allWordsCounter;
+		printf("Total words in '%s': %d\n\n", args[h], allWordsCounter);
 		fclose(fptr);
 	}
 
 	ArvoreRB *a = NULL;
-	double tf, idf, tfidf;
+	float tf, idf, tfidf;
 	for (h = 3; h < argsLength; h++)
 	{
 		tfidf = 0;
@@ -441,18 +474,19 @@ int search(int argsLength, char **args)
 			// Calc the TFIDF
 			if (wordsInFile[h - 3] > 0 && wordIsInFileArray[i] > 0 && splitCounter > 0)
 			{
-				tf = wordsArray[i][h - 3] / wordsInFile[h - 3];
-				idf = log10(filesLength / wordIsInFileArray[i]);
-				tfidf += (tf * idf) / splitCounter;
+				tf = (float)wordsArray[i][h - 3] / (float)wordsInFile[h - 3];
+				idf = log10((float)filesLength / (float)wordIsInFileArray[i]);
+				tfidf += (float)(tf * idf) / (float)splitCounter;
+				printf("Word: %d, File: %d, TF: %.3f, IDF: %.3f, TFIDF: %.3f\n", i, h - 3, tf, idf, tfidf);
 			}
 		}
-		a = inserir(a, args[h], 1, tfidf);
+		a = inserirByTFIDF(a, args[h], 1, tfidf);
 	}
 
-	// printf("RED BLACK OK: %d", arv_rb_check(a, 0, get_tree_height(a)));
+	printf("\nRED BLACK OK: %d\n", arv_rb_check(a, 0, get_tree_height(a)));
 	// printf("\nBINARY OK: %d\n", arv_bin_check(a));
-	// printTree(a, 1);
-	printf("Resultados da busca por \"%s\":\n", search);
+	printTree(a, 1);
+	printf("\nResultados da busca por \"%s\":\n", search);
 	printTreeOrder2(a);
 
 	free(search);
